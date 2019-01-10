@@ -118,6 +118,9 @@ class ArgumentationFramework(object):
     def get_some_preferred_extensions(self):
         return self.__solverManager.get_some_extension(ExtensionType.PREFERRED, self.arguments, self.attacks, self.matrix)
 
+    def get_stage_extension(self):
+        return self.__solverManager.get_extension(ExtensionType.STAGE, self.arguments, self.attacks, self.matrix)
+
     def is_credulously_accepted(self, extension: ExtensionType, argument):
         return self.__solverManager.is_credulously_accepted(extension, self.arguments, self.attacks, argument, self.matrix)
 

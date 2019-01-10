@@ -58,4 +58,3 @@ class ArgumentationFrameworkTests(TestCase):
         actual_preferred = argumentation_framework.get_preferred_extension()
         expected_preferred = TestHelper.read_solution_from_file(solution)
         TestHelper.assert_lists_equal(expected_preferred, actual_preferred)
-

@@ -3,15 +3,17 @@ from alias.classes.matrix import Matrix
 from alias.classes.solvers.extensionType import ExtensionType
 from alias.classes.solvers.picosatSolver import PicosatSolver
 from alias.classes.solvers.solverType import SolverType
+from alias.classes.solvers.z3Solver import Z3Solver
 
 
 class SolverManager(object):
     def __init__(self):
-        self.solver = SolverType.PICOSAT
+        self.solver = SolverType.Z3
         self.__extensions = {
             ExtensionType.COMPLETE: [],
             ExtensionType.PREFERRED: [],
             ExtensionType.STABLE: [],
+            ExtensionType.STAGE: [],
         }
         self.dirty = False
         self.__extensionsManager = ExtensionManager()
@@ -22,9 +24,9 @@ class SolverManager(object):
                 self.__reset_extensions()
                 self.dirty = False
             possible_solutions = self.__get_solver().solve(extension, arguments, attacks)
-            for solution in next(possible_solutions):
-                if self.__extensionsManager.extensions[extension].verify_solution(solution, arguments, matrix) and solution not in self.__extensions[extension]:
-                    self.__extensions[extension].append(solution)
+            for solution in possible_solutions:
+                # if extension is ExtensionType.STAGE or self.__extensionsManager.extensions[extension].verify_solution(solution, arguments, matrix) and solution not in self.__extensions[extension]:
+                self.__extensions[extension].append(solution)
 
         return self.__extensions[extension]
 
@@ -73,6 +75,8 @@ class SolverManager(object):
     def __get_solver(self):
         if self.solver == SolverType.PICOSAT:
             return PicosatSolver()
+        elif self.solver == SolverType.Z3:
+            return Z3Solver()
 
     def __reset_extensions(self):
         for k in self.__extensions:
