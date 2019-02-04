@@ -175,3 +175,4 @@ output_filename\.pstats
 
 extensions_testing/stable\.py
 web_demo/upload/*
+results
