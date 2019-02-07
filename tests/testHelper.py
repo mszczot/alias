@@ -6,10 +6,9 @@ class TestHelper(object):
 
     @staticmethod
     def assert_lists_equal(expected, actual):
-        equal = True
-        for x in expected:
-            if x not in actual:
-                equal = False
+        expected = [frozenset(x) for x in expected]
+        actual = [frozenset(x) for x in actual]
+        equal = len(set(actual) - set(expected)) == 0
         if not equal:
             error = 'Lists are not equal. Expected ' + str(expected) + ', actual: ' + str(actual) + '\n'
 

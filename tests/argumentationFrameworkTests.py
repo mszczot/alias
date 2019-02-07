@@ -10,6 +10,7 @@ class ArgumentationFrameworkTests(TestCase):
     stable_prefix = './frameworks/stable/'
     complete_prefix = './frameworks/complete/'
     preferred_prefix = './frameworks/preferred/'
+    stage_prefix = './frameworks/stage/'
     
     def setUp(self):
         """METHOD_SETUP"""
@@ -58,3 +59,12 @@ class ArgumentationFrameworkTests(TestCase):
         actual_preferred = argumentation_framework.get_preferred_extension()
         expected_preferred = TestHelper.read_solution_from_file(solution)
         TestHelper.assert_lists_equal(expected_preferred, actual_preferred)
+
+    @parameterized.expand([
+        [stage_prefix + 'stage1.tgf', stage_prefix + 'stage1answer'],
+    ])
+    def test_compute_all_stage_extensions(self, framework, solution):
+        argumentation_framework = alias.read_tgf(framework)
+        actual_stage = argumentation_framework.get_stage_extension()
+        expected_stage = TestHelper.read_solution_from_file(solution)
+        TestHelper.assert_lists_equal(expected_stage, actual_stage)
