@@ -12,17 +12,7 @@ class Z3Solver(BaseSolver):
         self.__mapping = dict()
 
     def solve(self, extension: ExtensionType, args: dict, attacks: list):
-        test = []
-        sub = self.get_subframeworks(args)
-        print(sub)
-        for a in sub:
-            temp_dict = {}
-            for arg in a:
-                temp_dict[arg] = args[arg]
-            b = self.test(temp_dict, attacks)
-            print(b)
-            test.append(b)
-        return test
+        return self.test(args, attacks)
 
     def test(self, args, attacks):
         self.__solver = Solver()

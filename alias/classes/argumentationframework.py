@@ -7,7 +7,7 @@ from alias.classes.matrix import Matrix
 from alias.classes.argument import Argument
 from alias.classes.semantics.extensionManager import ExtensionManager
 from alias.classes.solvers.solverManager import SolverManager
-from alias.classes.subframeworks.tarjan import Tarjan
+from alias.classes.subframeworks.subframeworkManager import SubframeworkManager
 
 
 class ArgumentationFramework(object):
@@ -20,6 +20,7 @@ class ArgumentationFramework(object):
         self._matrix = None  # matrix representation of the framework
         self.__extensionManager = ExtensionManager()
         self.__solverManager = SolverManager()
+        self.__subframeworkManager = SubframeworkManager()
 
     @property
     def matrix(self):
@@ -94,23 +95,18 @@ class ArgumentationFramework(object):
         Method to draw directed graph of the argumentation framework
         :return:
         """
-        colors = ['blue', 'red', 'yellow', 'black', 'green', 'purple', 'brown', 'orange', 'cyan', 'magenta', 'pink', 'grey']
         graph = self.__get_graph()
         pos = nx.spring_layout(graph, k=0.30, iterations=20)
-        nodes = self.get_subframeworks()
-        counter = 0
-        print(len(nodes))
-        for i in nodes:
-            nx.draw_networkx_nodes(graph, pos, nodelist=list(i), node_color=colors[counter])
-            counter += 1
+        nx.draw_networkx_nodes(graph, pos)
         nx.draw_networkx_labels(graph, pos)
         nx.draw_networkx_edges(graph, pos)
         plt.show()
 
     def get_subframeworks(self):
-        a = Tarjan(self.__get_graph())
-        result = a.tarjan()
-        return result
+        return self.__subframeworkManager.set_subframeworks(self.__get_graph())
+
+    def test(self):
+        return self.__subframeworkManager.solve()
 
     def get_stable_extension(self):
         return self.__solverManager.get_extension(ExtensionType.STABLE, self.arguments, self.attacks, self.matrix)

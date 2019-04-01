@@ -18,7 +18,7 @@ class SolverManager(object):
         self.dirty = False
         self.__extensionsManager = ExtensionManager()
 
-    def get_extension(self, extension: ExtensionType, arguments: dict, attacks: list, matrix: Matrix):
+    def get_extension(self, extension: ExtensionType, arguments: dict, attacks: list):
         if self.dirty or len(self.__extensions[extension]) == 0:
             if self.dirty:
                 self.__reset_extensions()

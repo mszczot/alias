@@ -1,10 +1,7 @@
-import networkx
-
-
 class Tarjan(object):
-    def __init__(self, graph: networkx.DiGraph):
-        self.__edges = graph.edges
-        self.__vertices = graph.nodes
+    def __init__(self, edges: list, vertices: list):
+        self.__edges = edges
+        self.__vertices = vertices
         self.__indices = dict((v, -1) for v in self.__vertices)
         self.__lowlinks = self.__indices.copy()
         self.__connected_components = []
@@ -15,8 +12,6 @@ class Tarjan(object):
         for v in self.__vertices:
             if self.__indices[v] < 0:
                 self.strong_connect(v, index, stack)
-
-        print(self.__connected_components)
         return self.__connected_components
 
     def strong_connect(self, vertex, index, stack):
