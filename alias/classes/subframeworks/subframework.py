@@ -1,6 +1,3 @@
-import self as self
-
-
 class Subframework(object):
     def __init__(self, args: list, attacks: list, id):
         self.__id = id

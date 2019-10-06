@@ -1,5 +1,5 @@
-from tarjan.tc import tc
 from z3 import *
+from tarjan.tc import tc
 
 from alias.classes.solvers import BaseSolver, ExtensionType
 
