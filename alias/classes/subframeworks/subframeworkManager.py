@@ -26,7 +26,8 @@ class SubframeworkManager(object):
         self.__generate_in_out_edges()
         self.__framework['Arguments'] = list(self.__subframeworks.keys())
         self.__framework['Attacks'] = self.__attacks
-        return self.__framework
+        self.solve()
+        return self.__subframeworks
 
     def __create_subframeworks(self):
         for component in self.__connected_components:
@@ -64,7 +65,7 @@ class SubframeworkManager(object):
     def solve(self):
         rooted = self.__get_rooted_frameworks()
         for r in rooted:
-            t = self.__solverManager.get_extension(ExtensionType.STABLE, r.arguments, r.attacks)
+            t = self.__solverManager.get_extension(ExtensionType.ADMISSIBLE, r.arguments, r.attacks, )
             print(t)
 
     def __get_rooted_frameworks(self):

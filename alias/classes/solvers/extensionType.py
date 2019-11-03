@@ -2,7 +2,9 @@ from enum import Enum
 
 
 class ExtensionType(Enum):
-    COMPLETE = 1
-    PREFERRED = 2
-    STABLE = 3
-    STAGE = 4
+    CONFLICT_FREE = 1
+    ADMISSIBLE = 2
+    COMPLETE = 3
+    PREFERRED = 4
+    STABLE = 5
+    STAGE = 6

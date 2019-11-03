@@ -10,22 +10,23 @@ class SolverManager(object):
     def __init__(self):
         self.solver = SolverType.Z3
         self.__extensions = {
+            ExtensionType.CONFLICT_FREE: [],
+            ExtensionType.ADMISSIBLE: [],
             ExtensionType.COMPLETE: [],
             ExtensionType.PREFERRED: [],
             ExtensionType.STABLE: [],
-            ExtensionType.STAGE: [],
+            ExtensionType.STAGE: []
         }
         self.dirty = False
         self.__extensionsManager = ExtensionManager()
 
-    def get_extension(self, extension: ExtensionType, arguments: dict, attacks: list, matrix: Matrix):
+    def get_extension(self, extension: ExtensionType, arguments: dict, attacks: list):
         if self.dirty or len(self.__extensions[extension]) == 0:
             if self.dirty:
                 self.__reset_extensions()
                 self.dirty = False
             possible_solutions = self.__get_solver().solve(extension, arguments, attacks)
             for solution in possible_solutions:
-                # if extension is ExtensionType.STAGE or self.__extensionsManager.extensions[extension].verify_solution(solution, arguments, matrix) and solution not in self.__extensions[extension]:
                 self.__extensions[extension].append(solution)
 
         return self.__extensions[extension]

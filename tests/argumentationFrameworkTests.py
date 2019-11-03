@@ -32,33 +32,33 @@ class ArgumentationFrameworkTests(TestCase):
         expected_stable = TestHelper.read_solution_from_file(solution)
         TestHelper.assert_lists_equal(expected_stable, actual_stable)
 
-    @parameterized.expand([
-        [complete_prefix + 'complete1.tgf', complete_prefix + 'complete1answer'],
-        [complete_prefix + 'complete2.tgf', complete_prefix + 'complete2answer'],
-        [complete_prefix + 'complete3.tgf', complete_prefix + 'complete3answer'],
-        [complete_prefix + 'complete4.tgf', complete_prefix + 'complete4answer'],
-        [complete_prefix + 'complete5.tgf', complete_prefix + 'complete5answer'],
-        [complete_prefix + 'complete6.tgf', complete_prefix + 'complete6answer'],
-    ])
-    def test_compute_all_complete_extensions(self, framework, solution):
-        argumentation_framework = alias.read_tgf(framework)
-        actual_complete = argumentation_framework.get_complete_extension()
-        expected_complete = TestHelper.read_solution_from_file(solution)
-        TestHelper.assert_lists_equal(expected_complete, actual_complete)
+    # @parameterized.expand([
+    #     [complete_prefix + 'complete1.tgf', complete_prefix + 'complete1answer'],
+    #     [complete_prefix + 'complete2.tgf', complete_prefix + 'complete2answer'],
+    #     [complete_prefix + 'complete3.tgf', complete_prefix + 'complete3answer'],
+    #     [complete_prefix + 'complete4.tgf', complete_prefix + 'complete4answer'],
+    #     [complete_prefix + 'complete5.tgf', complete_prefix + 'complete5answer'],
+    #     [complete_prefix + 'complete6.tgf', complete_prefix + 'complete6answer'],
+    # ])
+    # def test_compute_all_complete_extensions(self, framework, solution):
+    #     argumentation_framework = alias.read_tgf(framework)
+    #     actual_complete = argumentation_framework.get_complete_extension()
+    #     expected_complete = TestHelper.read_solution_from_file(solution)
+    #     TestHelper.assert_lists_equal(expected_complete, actual_complete)
 
-    @parameterized.expand([
-        [preferred_prefix + 'preferred1.tgf', preferred_prefix + 'preferred1answer'],
-        [preferred_prefix + 'preferred2.tgf', preferred_prefix + 'preferred2answer'],
-        [preferred_prefix + 'preferred3.tgf', preferred_prefix + 'preferred3answer'],
-        [preferred_prefix + 'preferred4.tgf', preferred_prefix + 'preferred4answer'],
-        [preferred_prefix + 'preferred5.tgf', preferred_prefix + 'preferred5answer'],
-        [preferred_prefix + 'preferred6.tgf', preferred_prefix + 'preferred6answer'],
-    ])
-    def test_compute_all_preferred_extensions(self, framework, solution):
-        argumentation_framework = alias.read_tgf(framework)
-        actual_preferred = argumentation_framework.get_preferred_extension()
-        expected_preferred = TestHelper.read_solution_from_file(solution)
-        TestHelper.assert_lists_equal(expected_preferred, actual_preferred)
+    # @parameterized.expand([
+    #     [preferred_prefix + 'preferred1.tgf', preferred_prefix + 'preferred1answer'],
+    #     [preferred_prefix + 'preferred2.tgf', preferred_prefix + 'preferred2answer'],
+    #     [preferred_prefix + 'preferred3.tgf', preferred_prefix + 'preferred3answer'],
+    #     [preferred_prefix + 'preferred4.tgf', preferred_prefix + 'preferred4answer'],
+    #     [preferred_prefix + 'preferred5.tgf', preferred_prefix + 'preferred5answer'],
+    #     [preferred_prefix + 'preferred6.tgf', preferred_prefix + 'preferred6answer'],
+    # ])
+    # def test_compute_all_preferred_extensions(self, framework, solution):
+    #     argumentation_framework = alias.read_tgf(framework)
+    #     actual_preferred = argumentation_framework.get_preferred_extension()
+    #     expected_preferred = TestHelper.read_solution_from_file(solution)
+    #     TestHelper.assert_lists_equal(expected_preferred, actual_preferred)
 
     @parameterized.expand([
         [stage_prefix + 'stage1.tgf', stage_prefix + 'stage1answer'],

@@ -1,5 +1,5 @@
 class Subframework(object):
-    def __init__(self, args: list, attacks: list, id):
+    def __init__(self, args: {}, attacks: list, id):
         self.__id = id
         self.__arguments = args
         self.__attacks = attacks

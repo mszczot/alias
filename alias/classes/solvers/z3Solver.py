@@ -12,36 +12,50 @@ class Z3Solver(BaseSolver):
         self.__mapping = dict()
 
     def solve(self, extension: ExtensionType, args: dict, attacks: list):
-        return self.test(args, attacks)
-
-    def test(self, args, attacks):
         self.__solver = Solver()
         self.__create_bool_variables(args)
-        root_args = self.__get_root_args(args)
-        for x in root_args:
-            self.__solver.add(And(self.__variables[x]))
-        # if extension == ExtensionType.STAGE:
-        self.__in_label_clause(args)
-        self.__out_label_clause(args)
-        # self.__conflict_free_clause(attacks)
-        # self.__get_defence_arguments(args)
+        if extension is ExtensionType.CONFLICT_FREE:
+            return self.__get_conflict_free_sets(attacks)
+        if extension is ExtensionType.ADMISSIBLE:
+            return self.__get_admissible_sets(args, attacks)
+        if extension is ExtensionType.STAGE:
+            return self.__get_stage_extension(args, attacks)
+
+    def __get_conflict_free_sets(self, attacks):
+        self.__conflict_free_clauses(attacks)
+        return self.__solve()
+
+    def __get_admissible_sets(self, args, attacks):
+        self.__admissible_clauses(args, attacks)
+        return self.__solve()
+
+    def __get_stage_extension(self, args, attacks):
+        in_label = self.__get_root_args(args)
+        if len(in_label) == 0:
+            return []
+        out_label = []
+        for arg in in_label:
+            out_label.append(args[arg].attacking)
+        return out_label
+
+    def __solve(self):
+        """
+        Aggregates the solutions from the Z3 solver
+        :return:
+        """
         solutions_set = set()
-        # print(self.__solver)
         solutions = self.__get_solutions()
         my_result = set()
         for sol in solutions:
             solutions_set.add(frozenset(sol))
             my_result.add(frozenset(sol))
-        for sol_set in solutions_set:
-            for ss in solutions_set:
-                if ss is not sol_set and sol_set.issubset(ss):
-                    try:
-                        my_result.remove(sol_set)
-                    except:
-                        continue
         return [list(x) for x in my_result]
 
     def __get_solutions(self):
+        """
+        Method to iteratively get the solutions from the Z3 solver
+        :return:
+        """
         solutions = []
         while self.__solver.check() == sat:
             model = self.__solver.model()
@@ -68,6 +82,11 @@ class Z3Solver(BaseSolver):
         return my_return
 
     def __create_bool_variables(self, args: dict):
+        """
+        Maps the arguments of the argumentation framework into a dictionary of Boolean variables used by Z3
+        :param args: dictionary of arguments in the argumentation framework
+        :return:
+        """
         self.__variables = {}
         self.__mapping = {}
         for k in args.keys():
@@ -75,38 +94,32 @@ class Z3Solver(BaseSolver):
             self.__variables[k] = arg
             self.__mapping[arg] = k
 
-    def __in_label_clause(self, args: dict):
-        for k, a in args.items():
-            elements = []
-            for attacker in a.attacked_by:
-                if attacker in self.__variables:
-                    elements.append(self.__variables[attacker])
-            if a.is_attacked():
-                self.__solver.add(simplify(Implies(Not(And(elements)), self.__variables[a.name])))
-                # self.__solver.add(If(And(elements), Not(self.__variables[a.name]), And(self.__variables[a.name])))
-
-    def __out_label_clause(self, args: dict):
-        for k, a in args.items():
-            if a.is_attacked():
-                elements = []
-                for attacker in a.attacked_by:
-                    if attacker in self.__variables:
-                        elements = self.__variables[attacker]
-                self.__solver.add(simplify(Implies(Or(elements), Not(self.__variables[a.name]))))
-                # self.__solver.add(If(Or(elements), Not(self.__variables[a.name]), And(self.__variables[a.name])))
-
-    def __conflict_free_clause(self, attacks: list):
+    def __conflict_free_clauses(self, attacks: list):
+        """
+        Adds clauses for the conflict free sets
+        :param attacks: list of attacks in the argumentation framework
+        :return:
+        """
         for attack in attacks:
-            self.__solver.add(simplify(Or(Not(self.__variables[attack[0]]), Not(self.__variables[attack[1]]))))
+            self.__solver.add(simplify(Implies((self.__variables[attack[0]]), Not(self.__variables[attack[1]]))))
 
-    def __get_max_conflict_free(self, attacks: list):
-        for attack in attacks:
-            self.__solver.add(simplify(Or(Not(self.__variables[attack[0]]), Not(self.__variables[attack[1]]))))
-        solutions = []
-        self.get_models(self.__solver)
+    def __admissible_clauses(self, args: dict, attacks: list):
+        """
+        Adds clauses for the admissible sets
+        :param args: a dictionary of arguments
+        :param attacks: list of attacks in the argumentation framework
+        :return:
+        """
+        self.__conflict_free_clauses(attacks)
+        for k, arg in args.items():
+            for attacker in arg.attacked_by:
+                if args[attacker].is_attacked():
+                    for defender in args[attacker].attacked_by:
+                        if defender is not k and defender not in arg.attacked_by:
+                            self.__solver.add(Or(Implies(self.__variables[k], self.__variables[defender])))
+                else:
+                    self.__solver.add(Not(self.__variables[k]))
         print(self.__solver)
-
-        return solutions
 
     def __is_max(self, solutions):
         while self.__solver.check() == sat:
@@ -142,17 +155,6 @@ class Z3Solver(BaseSolver):
                 block.append(c != m[d])
             s.add(Or(block))
         return result
-
-    def __get_defence_arguments(self, args: dict):
-        for k, v in args.items():
-            if v.is_attacked():
-                for att in v.attacked_by:
-                    if args[att].is_attacked():
-                        for defender in args[att].attacked_by:
-                            def_arg = args[defender]
-                            if v.name not in def_arg.attacking:
-                                self.__solver.add(
-                                    simplify(Implies(self.__variables[v.name], self.__variables[def_arg.name])))
 
     def get_subframeworks(self, args):
         a = {}
