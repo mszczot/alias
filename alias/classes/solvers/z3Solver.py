@@ -77,7 +77,7 @@ class Z3Solver(BaseSolver):
                 if all_out:
                     in_label.append(arg)
                     undec_label.remove(arg)
-                    finished = True
+                    finished = False
 
         return [arg for arg in in_label]
 
@@ -85,7 +85,19 @@ class Z3Solver(BaseSolver):
         self.__admissible_clauses(args, attacks)
         stage = self.__get_stage_extension(args)
         self.__solver.add(And([self.__variables[arg] for arg in stage]))
-        return self.__get_solutions()
+        possible_solutions = self.__get_solutions()
+        solutions = []
+        for solution in possible_solutions:
+            attacked_by = set()
+            attacking = set()
+            for s in solution:
+                for attacker in args[s].attacked_by:
+                    attacked_by.add(attacker)
+                for attack in args[s].attacking:
+                    attacking.add(attack)
+            if attacked_by.issubset(attacking):
+                solutions.append(solution)
+        return solutions
 
     def __get_preferred_extensions(self, args: dict, attacks: list):
         self.__admissible_clauses(args, attacks)
@@ -111,7 +123,7 @@ class Z3Solver(BaseSolver):
     def __get_solutions(self, maximal: bool = False):
         """
         Method to iteratively get the solutions from the Z3 solver
-        :return:
+        :return: list of solutions
         """
         solutions = []
         prev_solution = []
@@ -166,7 +178,7 @@ class Z3Solver(BaseSolver):
         :return:
         """
         for attack in attacks:
-            self.__solver.add(simplify(Implies((self.__variables[attack[0]]), Not(self.__variables[attack[1]]))))
+            self.__solver.add(simplify(Implies(self.__variables[attack[0]], Not(self.__variables[attack[1]]))))
 
     def __admissible_clauses(self, args: dict, attacks: list):
         """
@@ -177,35 +189,16 @@ class Z3Solver(BaseSolver):
         """
         self.__conflict_free_clauses(attacks)
         for k, arg in args.items():
+            defenders = []
             for attacker in arg.attacked_by:
                 if args[attacker].is_attacked():
-                    defenders = []
                     for defender in args[attacker].attacked_by:
                         if defender not in arg.attacked_by:
-                            defenders.append(Implies(self.__variables[k], self.__variables[defender]))
-                    if len(defenders) > 0:
-                        self.__solver.add(Or(defenders))
-                else:
-                    self.__solver.add(Not(self.__variables[k]))
-
-    def get_models(self, s):
-        result = []
-        while self.__solver.check() == sat:
-            m = s.model()
-            result.append(m)
-            # Create a new constraint the blocks the current model
-            block = []
-            for d in m:
-                # d is a declaration
-                if d.arity() > 0:
-                    raise Z3Exception("uninterpreted functions are not supported")
-                # create a constant from declaration
-                c = d()
-                if is_array(c) or c.sort().kind() == Z3_UNINTERPRETED_SORT:
-                    raise Z3Exception("arrays and uninterpreted sorts are not supported")
-                block.append(c != m[d])
-            s.add(Or(block))
-        return result
+                            defenders.append(simplify(Implies(self.__variables[k], self.__variables[defender])))
+            if len(defenders) > 0:
+                self.__solver.add(simplify(Or(defenders)))
+            elif arg.is_attacked():
+                self.__solver.add(simplify(Not(self.__variables[k])))
 
     def get_subframeworks(self, args):
         a = {}

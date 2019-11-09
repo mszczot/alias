@@ -11,6 +11,7 @@ class ArgumentationFrameworkTests(TestCase):
     complete_prefix = './frameworks/complete/'
     preferred_prefix = './frameworks/preferred/'
     stage_prefix = './frameworks/stage/'
+    admissible_prefix = './frameworks/admissible/'
     
     def setUp(self):
         """METHOD_SETUP"""
@@ -56,6 +57,15 @@ class ArgumentationFrameworkTests(TestCase):
         TestHelper.assert_lists_equal(expected_complete, actual_complete)
 
     @parameterized.expand([
+        [admissible_prefix + 'admissible1.tgf', admissible_prefix + 'admissible1answer'],
+    ])
+    def test_compute_all_admissible_sets(self, framework, solution):
+        argumentation_framework = alias.read_tgf(framework)
+        actual_admissible = argumentation_framework.get_admissible_sets()
+        expected_admissible = TestHelper.read_solution_from_file(solution)
+        TestHelper.assert_lists_equal(expected_admissible, actual_admissible)
+
+    @parameterized.expand([
         [preferred_prefix + 'preferred1.tgf', preferred_prefix + 'preferred1answer'],
         [preferred_prefix + 'preferred2.tgf', preferred_prefix + 'preferred2answer'],
         [preferred_prefix + 'preferred3.tgf', preferred_prefix + 'preferred3answer'],
@@ -68,4 +78,3 @@ class ArgumentationFrameworkTests(TestCase):
         actual_preferred = argumentation_framework.get_preferred_extension()
         expected_preferred = TestHelper.read_solution_from_file(solution)
         TestHelper.assert_lists_equal(expected_preferred, actual_preferred)
-
