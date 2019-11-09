@@ -19,24 +19,69 @@ class Z3Solver(BaseSolver):
         if extension is ExtensionType.ADMISSIBLE:
             return self.__get_admissible_sets(args, attacks)
         if extension is ExtensionType.STAGE:
-            return self.__get_stage_extension(args, attacks)
+            return self.__get_stage_extension(args)
+        if extension is ExtensionType.COMPLETE:
+            return self.__get_complete_extensions(args, attacks)
 
-    def __get_conflict_free_sets(self, attacks):
+    def __get_conflict_free_sets(self, attacks: list):
+        """
+        Generates conflict free sets based on the attacks
+        :param attacks: list of attacks in the argumentation framework
+        :return:
+        """
         self.__conflict_free_clauses(attacks)
         return self.__solve()
 
-    def __get_admissible_sets(self, args, attacks):
+    def __get_admissible_sets(self, args: dict, attacks: list):
+        """
+        Generates admissible sets based on arguments and attacks in the argumentation framework
+        :param args: dictionary of arguments
+        :param attacks: list of attacks in the argumentation framework
+        :return:
+        """
         self.__admissible_clauses(args, attacks)
         return self.__solve()
 
-    def __get_stage_extension(self, args, attacks):
+    def __get_stage_extension(self, args: dict):
+        """
+        Generates the stage extension
+        :param args: dictionary of arguments in the argumentation framework
+        :return:
+        """
         in_label = self.__get_root_args(args)
+        out_label = []
+        undec_label = [arg for arg in set(args.keys()) - set(in_label)]
         if len(in_label) == 0:
             return []
-        out_label = []
-        for arg in in_label:
-            out_label.append(args[arg].attacking)
-        return out_label
+
+        finished = False
+        while not finished:
+            finished = True
+            for arg in undec_label:
+                for attacker in args[arg].attacked_by:
+                    if attacker in in_label:
+                        out_label.append(arg)
+                        undec_label.remove(arg)
+                        finished = False
+                        break
+            for arg in undec_label:
+                all_out = True
+                for attacker in args[arg].attacked_by:
+                    if attacker not in out_label:
+                        all_out = False
+                        break
+                if all_out:
+                    in_label.append(arg)
+                    undec_label.remove(arg)
+                    finished = True
+
+        return [arg for arg in in_label]
+
+    def __get_complete_extensions(self, args: dict, attacks: list):
+        self.__admissible_clauses(args, attacks)
+        stage = self.__get_stage_extension(args)
+        self.__solver.add(And([self.__variables[arg] for arg in stage]))
+        return self.__solve()
 
     def __solve(self):
         """
@@ -75,6 +120,11 @@ class Z3Solver(BaseSolver):
 
     @staticmethod
     def __get_root_args(args: dict):
+        """
+        Generates the list of rooted arguments
+        :param args: dictionary of arguments in the argumentation framework
+        :return:
+        """
         my_return = []
         for arg in args.values():
             if not arg.is_attacked():
@@ -122,22 +172,6 @@ class Z3Solver(BaseSolver):
                         self.__solver.add(Or(defenders))
                 else:
                     self.__solver.add(Not(self.__variables[k]))
-
-    def __is_max(self, solutions):
-        while self.__solver.check() == sat:
-            model = self.__solver.model()
-            block = []
-            solution = []
-            for var in self.__variables.items():
-                v = model.eval(var[1], model_completion=True)
-                block.append(var[1] != v)
-                if is_true(v):
-                    solution.append(var[1])
-            self.__solver.add(Or(block))
-            test = []
-            for i in solution:
-                test.append(self.__mapping[i])
-            solutions.append(test)
 
     def get_models(self, s):
         result = []
