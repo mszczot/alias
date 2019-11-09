@@ -1,6 +1,6 @@
 *.h5
 */*.h5
-
+./tests/test.py
 *.pyc
 .DS_Store
 .coverage
