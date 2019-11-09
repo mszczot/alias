@@ -11,15 +11,18 @@ class TestHelper(object):
     def assert_lists_equal(expected, actual):
         expected_set = set([tuple(sorted(lst)) for lst in expected])
         actual_set = set([tuple(sorted(lst)) for lst in actual])
+
+        error = 'Lists are not equal. Expected ' + str(expected_set) + ', actual: ' + str(actual_set) + '\n'
+        error += 'Expected has ' + str(len(expected_set)) + ' items, Actual has ' + str(len(actual_set)) + ' items.'
+
         equal_length = len(expected_set & actual_set) is len(expected)
         if not equal_length:
-            error = 'Lists are not equal. Expected ' + str(expected) + ', actual: ' + str(actual) + '\n'
-            error += 'Expected has ' + str(len(expected)) + ' items, Actual has ' + str(len(actual)) + ' items.'
             raise AssertionError(error)
 
-        expected_numpy = numpy.array([numpy.array(sorted(x)) for x in expected])
-        actual_numpy = numpy.array([numpy.array(sorted(x)) for x in actual])
-        if not numpy.array_equal(expected_numpy, actual_numpy):
-            error = 'Lists are not equal. Expected ' + str(expected) + ', actual: ' + str(actual) + '\n'
-            error += 'Expected has ' + str(len(expected)) + ' items, Actual has ' + str(len(actual)) + ' items.'
+        for expected in expected_set:
+            if expected in actual_set:
+                actual_set.remove(expected)
+            else:
+                raise AssertionError(error)
+        if len(actual_set) > 0:
             raise AssertionError(error)
