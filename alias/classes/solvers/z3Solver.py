@@ -114,12 +114,14 @@ class Z3Solver(BaseSolver):
         for k, arg in args.items():
             for attacker in arg.attacked_by:
                 if args[attacker].is_attacked():
+                    defenders = []
                     for defender in args[attacker].attacked_by:
                         if defender is not k and defender not in arg.attacked_by:
-                            self.__solver.add(Or(Implies(self.__variables[k], self.__variables[defender])))
+                            defenders.append(Implies(self.__variables[k], self.__variables[defender]))
+                    if len(defenders) > 0:
+                        self.__solver.add(Or(defenders))
                 else:
                     self.__solver.add(Not(self.__variables[k]))
-        print(self.__solver)
 
     def __is_max(self, solutions):
         while self.__solver.check() == sat:
