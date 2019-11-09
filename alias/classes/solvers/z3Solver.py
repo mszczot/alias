@@ -22,6 +22,10 @@ class Z3Solver(BaseSolver):
             return self.__get_stage_extension(args)
         if extension is ExtensionType.COMPLETE:
             return self.__get_complete_extensions(args, attacks)
+        if extension is ExtensionType.PREFERRED:
+            return self.__get_preferred_extensions(args, attacks)
+        if extension is ExtensionType.STABLE:
+            return self.__get_stable_extensions(args, attacks)
 
     def __get_conflict_free_sets(self, attacks: list):
         """
@@ -30,7 +34,7 @@ class Z3Solver(BaseSolver):
         :return:
         """
         self.__conflict_free_clauses(attacks)
-        return self.__solve()
+        return self.__get_solutions()
 
     def __get_admissible_sets(self, args: dict, attacks: list):
         """
@@ -40,7 +44,7 @@ class Z3Solver(BaseSolver):
         :return:
         """
         self.__admissible_clauses(args, attacks)
-        return self.__solve()
+        return self.__get_solutions()
 
     def __get_stage_extension(self, args: dict):
         """
@@ -81,27 +85,36 @@ class Z3Solver(BaseSolver):
         self.__admissible_clauses(args, attacks)
         stage = self.__get_stage_extension(args)
         self.__solver.add(And([self.__variables[arg] for arg in stage]))
-        return self.__solve()
+        return self.__get_solutions()
 
-    def __solve(self):
-        """
-        Aggregates the solutions from the Z3 solver
-        :return:
-        """
-        solutions_set = set()
-        solutions = self.__get_solutions()
-        my_result = set()
-        for sol in solutions:
-            solutions_set.add(frozenset(sol))
-            my_result.add(frozenset(sol))
-        return [list(x) for x in my_result]
+    def __get_preferred_extensions(self, args: dict, attacks: list):
+        self.__admissible_clauses(args, attacks)
+        stage = self.__get_stage_extension(args)
+        self.__solver.add(And([self.__variables[arg] for arg in stage]))
+        maximal = True
+        return self.__get_solutions(maximal)
 
-    def __get_solutions(self):
+    def __get_stable_extensions(self, args: dict, attacks: list):
+        self.__conflict_free_clauses(attacks)
+        maximal = True
+        possible_solutions = self.__get_solutions(maximal)
+        solutions = []
+        for solution in possible_solutions:
+            attacked_args = set()
+            for s in solution:
+                for attacking in args[s].attacking:
+                    attacked_args.add(attacking)
+            if set(args.keys()) - set(solution) == attacked_args:
+                solutions.append(solution)
+        return solutions
+
+    def __get_solutions(self, maximal: bool = False):
         """
         Method to iteratively get the solutions from the Z3 solver
         :return:
         """
         solutions = []
+        prev_solution = []
         while self.__solver.check() == sat:
             model = self.__solver.model()
             block = []
@@ -112,10 +125,12 @@ class Z3Solver(BaseSolver):
                 if is_true(v):
                     solution.append(var[1])
             self.__solver.add(Or(block))
-            test = []
-            for i in solution:
-                test.append(self.__mapping[i])
-            solutions.append(test)
+            solution = [self.__mapping[arg] for arg in solution]
+            if maximal:
+                if set(prev_solution).issubset(set(solution)) and prev_solution in solutions:
+                    solutions.remove(prev_solution)
+                prev_solution = solution
+            solutions.append(solution)
         return solutions
 
     @staticmethod

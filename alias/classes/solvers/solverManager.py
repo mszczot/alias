@@ -26,9 +26,7 @@ class SolverManager(object):
                 self.__reset_extensions()
                 self.dirty = False
             possible_solutions = self.__get_solver().solve(extension, arguments, attacks)
-            for solution in possible_solutions:
-                self.__extensions[extension].append(solution)
-
+            self.__extensions[extension] = possible_solutions if possible_solutions else []
         return self.__extensions[extension]
 
     def get_some_extension(self, extension: ExtensionType, arguments: dict, attacks: list, matrix: Matrix):
