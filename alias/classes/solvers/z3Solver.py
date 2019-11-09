@@ -166,7 +166,7 @@ class Z3Solver(BaseSolver):
                 if args[attacker].is_attacked():
                     defenders = []
                     for defender in args[attacker].attacked_by:
-                        if defender is not k and defender not in arg.attacked_by:
+                        if defender not in arg.attacked_by:
                             defenders.append(Implies(self.__variables[k], self.__variables[defender]))
                     if len(defenders) > 0:
                         self.__solver.add(Or(defenders))
