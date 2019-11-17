@@ -8,6 +8,7 @@ from alias.classes.argument import Argument
 from alias.classes.semantics.extensionManager import ExtensionManager
 from alias.classes.solvers.solverManager import SolverManager
 from alias.classes.subframeworks.subframeworkManager import SubframeworkManager
+from alias.classes.utils import get_graph
 
 
 class ArgumentationFramework(object):
@@ -82,20 +83,12 @@ class ArgumentationFramework(object):
         self.arguments[attacked].attacked_by.append(attacker)
         self.__solverManager.dirty = True
 
-    def __get_graph(self):
-        graph = nx.DiGraph()
-        for n in self.arguments.keys():
-            graph.add_node(n)
-        for n in self.attacks:
-            graph.add_edge(n[0], n[1])
-        return graph
-
     def draw_graph(self):
         """
         Method to draw directed graph of the argumentation framework
         :return:
         """
-        graph = self.__get_graph()
+        graph = get_graph(self.arguments, self.attacks)
         pos = nx.spring_layout(graph, k=0.30, iterations=20)
         nx.draw_networkx_nodes(graph, pos)
         nx.draw_networkx_labels(graph, pos)
@@ -103,37 +96,37 @@ class ArgumentationFramework(object):
         plt.show()
 
     def get_subframeworks(self):
-        return self.__subframeworkManager.set_subframeworks(self.__get_graph())
+        return self.__subframeworkManager.set_subframeworks(self.arguments, self.attacks)
 
     def test(self):
         return self.__subframeworkManager.solve()
 
     def get_conflict_free_sets(self):
-        return self.__solverManager.get_extension(ExtensionType.CONFLICT_FREE, self.arguments, self.attacks)
+        return self.__solverManager.get_extensions(ExtensionType.CONFLICT_FREE, self.arguments, self.attacks)
 
     def get_admissible_sets(self):
-        return self.__solverManager.get_extension(ExtensionType.ADMISSIBLE, self.arguments, self.attacks)
+        return self.__solverManager.get_extensions(ExtensionType.ADMISSIBLE, self.arguments, self.attacks)
 
     def get_stable_extension(self):
-        return self.__solverManager.get_extension(ExtensionType.STABLE, self.arguments, self.attacks)
+        return self.__solverManager.get_extensions(ExtensionType.STABLE, self.arguments, self.attacks)
 
     def get_some_stable_extension(self):
         return self.__solverManager.get_some_extension(ExtensionType.STABLE, self.arguments, self.attacks, self.matrix)
     
     def get_complete_extension(self):
-        return self.__solverManager.get_extension(ExtensionType.COMPLETE, self.arguments, self.attacks)
+        return self.__solverManager.get_extensions(ExtensionType.COMPLETE, self.arguments, self.attacks)
 
     def get_some_complete_extension(self):
         return self.__solverManager.get_some_extension(ExtensionType.COMPLETE, self.arguments, self.attacks, self.matrix)
 
     def get_preferred_extension(self):
-        return self.__solverManager.get_extension(ExtensionType.PREFERRED, self.arguments, self.attacks)
+        return self.__solverManager.get_extensions(ExtensionType.PREFERRED, self.arguments, self.attacks)
 
     def get_some_preferred_extensions(self):
         return self.__solverManager.get_some_extension(ExtensionType.PREFERRED, self.arguments, self.attacks, self.matrix)
 
     def get_stage_extension(self):
-        return self.__solverManager.get_extension(ExtensionType.STAGE, self.arguments, self.attacks)
+        return self.__solverManager.get_extensions(ExtensionType.STAGE, self.arguments, self.attacks)
 
     def is_credulously_accepted(self, extension: ExtensionType, argument):
         return self.__solverManager.is_credulously_accepted(extension, self.arguments, self.attacks, argument, self.matrix)
