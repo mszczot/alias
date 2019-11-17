@@ -191,49 +191,28 @@ class Z3Solver(BaseSolver):
         self.__conflict_free_clauses(attacks)
         for attack in attacks:
             test = []
+            # if self attacking, then exclude the argument
             if attack[0] == attack[1]:
                 self.__solver.append(simplify(Not(self.__variables[attack[0]])))
+            # check if can defend itself and no other attack
+            if attack[0] in args[attack[1]].attacking:
+                print('test')
+                test.append(Or(self.__variables[attack[0]], self.__variables[attack[1]]))
+            # check each argument attacked by the argument being attacked in the attack tuple
+            # A -> B -> C
             for attacked in args[attack[1]].attacking:
+                # if the chained argument is not attacking the original attacker and is not the same as the original one
+                # A -> _ -> C
                 if attacked in args.keys() and attacked not in args[attack[0]].attacked_by and attacked != attack[0]:
                     test.append(Or(self.__variables[attack[0]], Not(self.__variables[attacked])))
-                    # test.append(If(self.__variables[attack[0]], self.__variables[attacked], self.__variables[attack[1]]))
-            if not args[attack[0]].is_attacked() and self.__variables[attack[0]] not in test:
-                test.append(And(self.__variables[attack[0]]))
-            test.append(simplify(Not(self.__variables[attack[1]])))
-            test.append(simplify(Or(self.__variables[attack[0]], Not(self.__variables[attack[1]]))))
+
+            for defender in args[attack[0]].attacked_by:
+                if defender in args.keys() and defender not in args[attack[1]].attacked_by and defender != attack[1]:
+                    print(attack[0], defender)
+
+
+            # if not args[attack[0]].is_attacked() and self.__variables[attack[0]] not in test:
+            #     test.append(And(self.__variables[attack[0]]))
             if len(test) > 0:
                 self.__solver.append(simplify(Or(test)))
         print(self.__solver)
-        # for k, arg in args.items():
-        #     defenders = []
-        #     for attacker in arg.attacked_by:
-        #         if args[attacker].is_attacked():
-        #             for defender in args[attacker].attacked_by:
-        #                 if defender not in arg.attacked_by:
-        #                     defenders.append(Implies(self.__variables[k], self.__variables[defender]))
-        #     if len(defenders) > 0:
-        #         if len(arg.attacked_by) == len(defenders):
-        #             self.__solver.append(And(defenders))
-        #         else:
-        #             self.__solver.append(Or(defenders))
-        #     elif arg.is_attacked():
-        #         self.__solver.append(simplify(Not(self.__variables[k])))
-
-    def get_subframeworks(self, args):
-        a = {}
-        for k, arg in args.items():
-            a[arg.name] = arg.attacking
-        test = tc(a)
-        result = set()
-        for k, v in test.items():
-            subset = False
-            if len(v) > 0:
-                # v = set(v)
-                # v.add(k)
-                if v not in result:
-                    for i, r in test.items():
-                        if set(v) != set(r) and set(v).issubset(r):
-                            subset = True
-                    if not subset:
-                        result.add(frozenset(v))
-        return result
