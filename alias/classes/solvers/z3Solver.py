@@ -179,7 +179,7 @@ class Z3Solver(BaseSolver):
         :return:
         """
         for attack in attacks:
-            self.__solver.add(simplify(Implies(self.__variables[attack[0]], Not(self.__variables[attack[1]]))))
+            self.__solver.add(simplify(Not(And(self.__variables[attack[0]], self.__variables[attack[1]]))))
 
     def __admissible_clauses(self, args: dict, attacks: list):
         """
@@ -189,30 +189,7 @@ class Z3Solver(BaseSolver):
         :return:
         """
         self.__conflict_free_clauses(attacks)
-        for attack in attacks:
-            test = []
-            # if self attacking, then exclude the argument
-            if attack[0] == attack[1]:
-                self.__solver.append(simplify(Not(self.__variables[attack[0]])))
-            # check if can defend itself and no other attack
-            if attack[0] in args[attack[1]].attacking:
-                print('test')
-                test.append(Or(self.__variables[attack[0]], self.__variables[attack[1]]))
-            # check each argument attacked by the argument being attacked in the attack tuple
-            # A -> B -> C
-            for attacked in args[attack[1]].attacking:
-                # if the chained argument is not attacking the original attacker and is not the same as the original one
-                # A -> _ -> C
-                if attacked in args.keys() and attacked not in args[attack[0]].attacked_by and attacked != attack[0]:
-                    test.append(Or(self.__variables[attack[0]], Not(self.__variables[attacked])))
-
-            for defender in args[attack[0]].attacked_by:
-                if defender in args.keys() and defender not in args[attack[1]].attacked_by and defender != attack[1]:
-                    print(attack[0], defender)
-
-
-            # if not args[attack[0]].is_attacked() and self.__variables[attack[0]] not in test:
-            #     test.append(And(self.__variables[attack[0]]))
-            if len(test) > 0:
-                self.__solver.append(simplify(Or(test)))
-        print(self.__solver)
+        for arg in args.values():
+            for attacker in arg.attacked_by:
+                defenders = [self.__variables[defender] for defender in args[attacker].attacked_by]
+                self.__solver.add(simplify(Implies(self.__variables[arg.name], Or(defenders))))

@@ -26,18 +26,12 @@ class SolverManager(object):
 
     def get_extensions(self, extension: ExtensionType, arguments: dict, attacks: list):
         if self.dirty or not self.__subFrameworkManager.are_subframework_generated():
-            print('generating')
             self.__subFrameworkManager.set_subframeworks(arguments, attacks)
         if self.dirty or len(self.__extensions[extension]) == 0:
-            solutions = []
             if self.dirty:
-                # if extension == ExtensionType.PREFERRED:
-                #     rooted_solutions = self.__get_rooted_solutions(extension)
-                #     solutions = self.__build_solutions(self.__subFrameworkManager.get_root_subframeworks(), rooted_solutions, extension)
-                # else:
-                solutions = self.__get_solver().solve(extension, arguments, attacks)
                 self.__reset_extensions()
-                self.dirty = False
+            solutions = self.__get_solver().solve(extension, arguments, attacks)
+            self.dirty = False
             self.__extensions[extension] = solutions
         return self.__extensions[extension]
 
