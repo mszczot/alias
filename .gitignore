@@ -177,3 +177,4 @@ extensions_testing/stable\.py
 web_demo/upload/*
 results
 benchmarkTesting\.py
+/tests/test2.py
